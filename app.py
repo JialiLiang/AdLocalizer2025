@@ -20,6 +20,9 @@ def check_password():
     """Returns `True` if the user had the correct password."""
     def password_entered():
         """Checks whether a password entered by the user is correct."""
+        # Get the entered password
+        entered_password = st.session_state["password"]
+        
         # Try to get password from environment variable first, then from Streamlit secrets
         stored_password = os.getenv("password")
         if stored_password is None and "password" in st.secrets:
@@ -29,7 +32,14 @@ def check_password():
             st.error("Password configuration is missing. Please contact the administrator.")
             return
             
-        if st.session_state["password"] == stored_password:
+        # Debug information (will be hidden in production)
+        if st.session_state.get("debug_mode", False):
+            st.write(f"Entered password: {entered_password}")
+            st.write(f"Stored password: {stored_password}")
+            st.write(f"Password match: {entered_password == stored_password}")
+            
+        # Compare passwords (case-sensitive)
+        if entered_password.strip() == stored_password.strip():
             st.session_state.authenticated = True
             st.session_state.password = ""  # Clear the password
         else:
