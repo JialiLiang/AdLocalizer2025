@@ -8,20 +8,25 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Initialize session state for authentication
+# Initialize session state for authentication and API keys
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
+if 'openai_api_key' not in st.session_state:
+    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY", "")
+if 'deepseek_api_key' not in st.session_state:
+    st.session_state.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "")
 
 def check_password():
     """Returns `True` if the user had the correct password."""
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets["password"]:
+        if st.session_state["password"] == os.getenv("password"):
             st.session_state.authenticated = True
             st.session_state.password = ""  # Clear the password
         else:
             st.session_state.authenticated = False
             st.session_state.password = ""  # Clear the password
+            st.error("Incorrect password. Please try again.")
 
     # First run or password not correct
     if not st.session_state.authenticated:
@@ -31,12 +36,35 @@ def check_password():
         return False
     return True
 
+def save_api_keys():
+    """Save API keys to session state"""
+    st.session_state.openai_api_key = st.session_state.openai_key_input
+    st.session_state.deepseek_api_key = st.session_state.deepseek_key_input
+    st.success("API keys saved successfully!")
+
 def main():
     st.title("Translation App")
     
     # Check authentication
     if not check_password():
         st.stop()
+    
+    # API Key Management Section
+    with st.expander("API Key Management", expanded=False):
+        st.write("Enter your API keys below:")
+        st.text_input(
+            "OpenAI API Key",
+            type="password",
+            value=st.session_state.openai_api_key,
+            key="openai_key_input"
+        )
+        st.text_input(
+            "DeepSeek API Key",
+            type="password",
+            value=st.session_state.deepseek_api_key,
+            key="deepseek_key_input"
+        )
+        st.button("Save API Keys", on_click=save_api_keys)
     
     # Main app content
     st.write("Welcome to the Translation App!")
@@ -65,6 +93,13 @@ def main():
         "TH": "Thai"
     }
     
+    # Model selection
+    model_choice = st.radio(
+        "Select Translation Model:",
+        ["OpenAI GPT-4", "DeepSeek"],
+        index=0
+    )
+    
     selected_languages = st.multiselect(
         "Select languages to translate to:",
         options=list(languages.keys()),
@@ -80,8 +115,21 @@ def main():
             st.error("Please select at least one language")
             return
             
-        # Initialize OpenAI client
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # Check if API key is available
+        if model_choice == "OpenAI GPT-4" and not st.session_state.openai_api_key:
+            st.error("Please enter your OpenAI API key in the API Key Management section")
+            return
+        elif model_choice == "DeepSeek" and not st.session_state.deepseek_api_key:
+            st.error("Please enter your DeepSeek API key in the API Key Management section")
+            return
+            
+        # Initialize appropriate client based on model choice
+        if model_choice == "OpenAI GPT-4":
+            client = OpenAI(api_key=st.session_state.openai_api_key)
+        else:
+            # DeepSeek implementation would go here
+            st.error("DeepSeek integration coming soon!")
+            return
         
         # Create progress bar
         progress_bar = st.progress(0)
