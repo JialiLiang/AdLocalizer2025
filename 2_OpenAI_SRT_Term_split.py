@@ -149,7 +149,7 @@ def process_srt(file_path, max_lengths):
         print(f"Error removing original file {file_path}: {e}")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY', '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'))
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Function to format time for SRT files
 def format_time(seconds):

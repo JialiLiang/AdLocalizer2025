@@ -16,7 +16,7 @@ import aiohttp
 load_dotenv()
 
 # DeepSeek API configuration
-DEEPSEEK_API_KEY = "sk-68cd0b8c0c1c4be680f3ee6dd6316d82"
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 def get_model_selection():
